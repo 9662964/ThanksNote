@@ -10,14 +10,39 @@ import Foundation
 import Firebase
 import FirebaseFirestore
 
-class NoteController {
+protocol noteControllerProtocol {
+    func notesRetrieved(notes:[Note])
+}
 
-    func getNotes() {
+
+class NoteController {
+    
+    var delegate: noteControllerProtocol?
+    var listener: ListenerRegistration?
+    deinit {
+        //Unregister database listener
+        listener?.remove()
+    }
+
+    func getNotes(_ starredOnly:Bool = false) {
+        
+        //detach any listener
+        listener?.remove()
+        
+        
         //get a reference to the database
         let db = Firestore.firestore()
         
+        var query: Query = db.collection("notes")
+        
+        //if we are only looking for starred notes, update the query
+        if starredOnly {
+            query = query.whereField("isStarred", isEqualTo: true)
+        }
+        
+        
         //get all the notes
-        db.collection("notes").getDocuments { (snapshot, error) in
+        self.listener = query.addSnapshotListener() { (snapshot, error) in
             //check for errors
             if error == nil && snapshot != nil {
                 var notes = [Note]()
@@ -33,7 +58,42 @@ class NoteController {
                     
                     notes.append(n)
                 }
+                
+                //call the delegate and pass back the notes in the main thread
+                DispatchQueue.main.async {
+                    self.delegate?.notesRetrieved(notes: notes)                     
+                }
+
             }
         }
+    }
+    
+    func deleteNote(_ n:Note) {
+        let db = Firestore.firestore()
+        db.collection("notes").document(n.docid).delete()
+    }
+    
+    func saveNote(_ n:Note) {
+        let db = Firestore.firestore()
+        db.collection("notes").document(n.docid).setData(noteToDictionary(n))
+    }
+    
+    func updateFaveStatus(_ docid:String, _ isStarred:Bool) {
+        let db = Firestore.firestore()
+        db.collection("notes").document(docid).updateData(["isStarred":isStarred])
+    }
+    
+    
+    func noteToDictionary(_ n:Note) -> [String:Any] {
+        var dict = [String:Any]()
+        
+        dict["docid"] = n.docid
+        dict["title"] = n.title
+        dict["body"] = n.body
+        dict["createdAt"] = n.createdAt
+        dict["lastUpdatedAt"] = n.lastUpdatedAt
+        dict["isStarred"] = n.inStarred
+        
+        return dict
     }
 }

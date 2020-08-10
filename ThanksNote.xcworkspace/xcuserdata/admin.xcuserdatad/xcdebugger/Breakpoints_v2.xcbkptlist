@@ -14,9 +14,9 @@
             filePath = "ThanksNote/NoteController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "34"
-            endingLineNumber = "34"
-            landmarkName = "getNotes()"
+            startingLineNumber = "59"
+            endingLineNumber = "59"
+            landmarkName = "getNotes(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
