@@ -1,0 +1,6 @@
+framework module Pods_ThanksNote {
+  umbrella header "Pods-ThanksNote-umbrella.h"
+
+  export *
+  module * { export * }
+}
